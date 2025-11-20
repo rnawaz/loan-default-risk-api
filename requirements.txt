@@ -1,0 +1,8 @@
+pandas 
+numpy 
+scikit-learn 
+fastapi 
+uvicorn 
+jupyter 
+torch
+gradio==3.50.2
