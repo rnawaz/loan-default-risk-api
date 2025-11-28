@@ -1,52 +1,82 @@
 import gradio as gr
 import torch
 import pandas as pd
-from src.model import MLP
+from src.predict import (load_mlp, preprocess_input, predict_mlp, load_xgb, predict_xgb)
 
-# load model
-model_path = "models/best_model.pth"
-model = MLP(num_features=11)
-model.load_state_dict(torch.load(model_path, map_location="cpu"))
-model.eval()
+FEATURE_ORDER = [
+    "loan_amnt", "term", "int_rate", "installment",
+    "annual_inc", "dti", "revol_util", "open_acc",
+    "grade", "home_ownership", "purpose"
+]
 
-# prediction function
-def predict_ui(loan_amnt, term, int_rate, installment, annual_inc, dti,
-               revol_util, open_acc, grade, home_ownership, purpose):
-    
-    # create input dataframe for the model
-    data = pd.DataFrame([[
-        loan_amnt, term, installment, annual_inc, dti,
-        revol_util, open_acc, grade, home_ownership, purpose
-    ]])
+# load models
+MLP_MODEL_PATH = "models/mlp_model.pth"
+XGB_MODEL_PATH = "models/xgb_model.json"
 
-    # convert to tensor
-    x = torch.tensor(data.values).float()
+mlp_model = load_mlp(MLP_MODEL_PATH, len(FEATURE_ORDER))
+xgb_model = load_xgb(XGB_MODEL_PATH)
 
-    with torch.no_grad():
-        prob = model(x).item()
 
-    return f"{prob:.3f}"
+# ----------------------------------------------------
+# Unified prediction function for Gradio
+# ----------------------------------------------------
+def prediction_interface(
+        loan_amnt, term, int_rate, installment, annual_inc,
+        dti, revol_util, open_acc, grade, home_ownership, purpose,
+        model_type
+):
+    # build inpput dict
+    input_dict = {
+        "loan_amnt": loan_amnt,
+        "term": term,
+        "int_rate": int_rate,
+        "installment": installment,
+        "annual_inc": annual_inc,
+        "dti": dti,
+        "revol_util": revol_util,
+        "open_acc": open_acc,
+        "grade": grade,
+        "home_ownership": home_ownership,
+        "purpose": purpose
+    }
 
-# build UI
-ui = gr.Interface(
-    fn=predict_ui,
-    inputs=[
-        gr.Number(label="Loan Amount"),
-        gr.Number(label="Term (months)"),
-        gr.Number(label="Interest Rate (%)"),
-        gr.Number(label="Installment"),
-        gr.Number(label="Annual Income"),
-        gr.Number(label="DTI"),
-        gr.Number(label="Revolving Util (%)"),
-        gr.Number(label="Open Accounts"),
-        gr.Number(label="Grade (encoded)"),
-        gr.Number(label="Home Ownership (encoded)"),
-        gr.Number(label="Purpose (encoded)")
-    ],
-    outputs=gr.Textbox(label="Dafault Probability"),
-    title="Loan Default Prediction",
-    description="Enter loan detials to get the predicted default probability"
+    if model_type=="MLP":
+        tensor = preprocess_input(input_dict, FEATURE_ORDER)
+        prob = predict_mlp(mlp_model, tensor)
+
+    else:
+        prob = predict_xgb(xgb_model, input_dict, FEATURE_ORDER)
+
+    return f"Default Probability: {prob:0.4f}"
+
+
+# ----------------------------------------------------
+# Gradio UI
+# ----------------------------------------------------
+inputs = [
+    gr.Number(label="Loan Amount"),
+    gr.Number(label="Term (months)"),
+    gr.Number(label="Interest Rate"),
+    gr.Number(label="Installment"),
+    gr.Number(label="Annual Income"),
+    gr.Number(label="DTI"),
+    gr.Number(label="Revolving Util (%)"),
+    gr.Number(label="Open Acounts"),
+    gr.Number(label="Grade (encoded)"),
+    gr.Number(label="Home Ownership(encoded"),
+    gr.Number(label="Purpose (encoded)"),
+    gr.Radio(["MLP", "XGBoost"], label="Model", value="XGBoost")
+]
+
+output = gr.Textbox(label="Prediction")
+
+app = gr.Interface(
+    fn=prediction_interface,
+    inputs=inputs,
+    outputs=output,
+    title="Loan Default Risk Prediction",
+    description="Choose model and enter loan features to predict default probability"
 )
 
-# Launcg for HUggingFace Spaces
-ui.launch(server_name="0.0.0.0", server_port=7860)
+if __name__=="__main__":
+    app.launch(server_name="0.0.0.0", server_port=7860)
