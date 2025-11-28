@@ -1,8 +1,7 @@
 pandas 
 numpy 
 scikit-learn 
-fastapi 
-uvicorn 
+xgboost
 jupyter 
 torch
 gradio==3.50.2
