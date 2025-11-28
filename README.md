@@ -1,135 +1,199 @@
-# Loan Default Risk Prediction API  
-An end-to-end machine learning system for predicting loan default probability.
-The project includes a PyTorch model, FastAPI backend, Gradio user interface, Docker container, and deployment on HuggingFace Spaces.
-This simulates a realistic ML workflow used in lending and fintech environments.
-##
-### Project Features  
-**1. Model Training (PyTorch)**
-* Uses a processed Lending Club-style dataset
-* Feed-forward neural network (MLP)
-* Saved model weights stored in models/best_model.pth
-* Configurable number of features
+# Loan Default Risk Prediction (End-to-End ML System)
+This project implements a complete machine learning workflow for predicting the probability of loan default. It includes data preprocessing, model development, training, evaluation, API serving, and web deployment using Docker and HuggingFace Spaces.  
+The system uses two models:
+* XGBoost Classifier (primary model)
+* MLP Neural Network (PyTorch)
 
-**2. API (FastAPI)**  
-A production-style prediction endpoint located at */predict*.  
-Receives a JSON payload and returns a default probability.
-
-**Example request:**
-
-```
-{
-  "loan_amnt": 10000,
-  "term": 36,
-  "int_rate": 12.5,
-  "installment": 310,
-  "annual_inc": 65000,
-  "dti": 14.0,
-  "revol_util": 45.0,
-  "open_acc": 6,
-  "grade": 2,
-  "home_ownership": 1,
-  "purpose": 4
-}
-```
-
-**Example response:**
-
-```
-{
-  "default_probability": 0.387
-}
-```
-
-**3. Gradio Web Interface**  
-A simple interactive UI that allows users to enter loan features and view predicted default risk.
-
-**4. Docker Deployment**  
-The entire project is containerized using a custom Dockerfile and deployed to HuggingFace Spaces.
+Both models are trained on the cleaned LendingClub dataset and support probability-based predictions.
 
 ##
+### System Architechture
+```
+                    ┌─────────────────────────┐
+                    │   Raw LendingClub Data  │
+                    └──────────────┬──────────┘
+                                   │
+                         Data Cleaning & Feature
+                               Engineering
+                     (notebooks/data_preprocess.ipynb)
+                                   │
+                                   ▼
+                     ┌─────────────────────────┐
+                     │   clean_data.csv        │
+                     └──────────────┬──────────┘
+                                   │
+                 ┌─────────────────┴──────────────────┐
+                 │                                    │
+                 ▼                                    ▼
+      ┌────────────────────┐               ┌────────────────────┐
+      │  train_mlp.py      │               │   train_xgb.py     │
+      │  (PyTorch MLP)     │               │  (XGBoost)         │
+      └─────────┬──────────┘               └─────────┬──────────┘
+                │                                    │
+                ▼                                    ▼
+     ┌────────────────────┐               ┌────────────────────┐
+     │  mlp_model.pth     │               │  xgb_model.json    │
+     └─────────┬──────────┘               └─────────┬──────────┘
+                │                                   │
+                └──────────────────┬────────────────┘
+                                   ▼
+                       ┌───────────────────────┐
+                       │  FastAPI Backend      │
+                       │      api.py           │
+                       └─────────┬─────────────┘
+                                 │
+                                 ▼
+                   ┌─────────────────────────────┐
+                   │     Gradio Web Interface    │
+                   │            app.py           │
+                   └─────────────────────────────┘
+                                 │
+                                 ▼
+                      ┌─────────────────────────┐
+                      │ HuggingFace Spaces App  │
+                      └─────────────────────────┘
+
+```
+### Dataset Description  
+The project uses the LendingClub accepted loan dataset (2007–2018).  
+After cleaning and selection, the final dataset includes these features:
+| Feature          | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| `loan_amnt`      | Loan amount requested                          |
+| `term`           | Loan term in months                            |
+| `int_rate`       | Interest rate                                  |
+| `installment`    | Monthly payment                                |
+| `annual_inc`     | Annual income                                  |
+| `dti`            | Debt-to-income ratio                           |
+| `revol_util`     | Revolving credit utilization                   |
+| `open_acc`       | Number of open accounts                        |
+| `grade`          | Credit grade (encoded)                         |
+| `home_ownership` | Home ownership type (encoded)                  |
+| `purpose`        | Loan purpose (encoded)                         |
+| `loan_status`    | Original status (string)                       |
+| `target`         | Binary target: 1 = Charged Off, 0 = Fully Paid |
+
+
+The final processed file is stored as:
+```
+data/clean_data.csv
+```
+
 ### Project Structure
 ```
-loan-default-risk-api/
+fintech-default-risk/
 │
-├── app.py                  # Gradio UI application
-├── requirements.txt
-├── Dockerfile
-│
-├── src/
-│   ├── api.py              # FastAPI prediction service
-│   ├── model.py            # PyTorch model definition
-│   ├── predict.py          # Preprocessing and inference helper
-│   ├── train.py            # Training script (optional)
-│   ├── dataset.py          # Dataset utilities (optional)
-│   └── __init__.py
+├── data/
+│   └── clean_data.csv
 │
 ├── models/
-│   └── best_model.pth      # Trained model weights
+│   ├── mlp_model.pth
+│   └── xgb_model.json
 │
+├── notebooks/
+│   └── data_preprocess.ipynb
+│
+├── src/
+│   ├── api.py
+│   ├── dataset.py
+│   ├── model.py
+│   ├── predict.py
+│   ├── train_mlp.py
+│   ├── train_xgb.py
+│   └── test_predict.py
+│
+├── app.py
+├── Dockerfile
+├── requirements.txt
 └── README.md
-
 ```
-##
-### Running the Project Locally  
-1. Create and activate a virtual environment
+### Installation
+Create a virtual environment:
 ```
 python -m venv venv
+venv\Scripts\activate   # Windows
+source venv/bin/activate # Mac/Linux
 ```
-
-Windows:
-```
-venv\Scripts\activate
-```
-
-macOS/Linux:
-```
-source venv/bin/activate
-```
-
-**2. Install dependencies**
+Install packages:
 ```
 pip install -r requirements.txt
 ```
 
-**3. Run the FastAPI backend**
+### Data Preprocessing
+Run the notebook:
+```
+notebooks/data_preprocess.ipynb
+```
+It performs:  
+* Feature selection
+* Cleaning and type conversion
+* Label encoding
+* Target engineering
+* Saves ```clean_data.csv```
+
+### Train the Models
+**XGBoost Training**
+```
+python src/train_xgb.py
+```
+Creates:
+```
+models/xgb_model.json
+```
+**MLP Training**
+```
+python src/train_mlp.py
+```
+Creates:
+```
+python src/train_mlp.py
+```
+### Run the API Locally
+Starts the server:
 ```
 uvicorn src.api:app --reload
 ```
-The interactive API documentation will be available at:
+Interactive docs:
 ```
 http://127.0.0.1:8000/docs
 ```
 
-**4. Run the Gradio UI**
+### Run the Gradio App
 ```
 python app.py
 ```
-##
-### Deployment (HuggingFace Spaces)
-The project uses a custom Dockerfile:
-```
-FROM python:3.9-slim
+### Deploy on HuggingFace Spaces
+1. Create a Docker Space
+2. item Upload:
+    * ```Dockerfile```
+    * ```app.py```
+    * ```requirements.txt```
+    * ```models/```folder
+3. Push the repo
+4. HuggingFace auto-builds the app
 
-WORKDIR /code
 
-COPY requirements.txt /code/
-RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /code/
 
-EXPOSE 7860
 
-CMD ["python", "app.py"]
-```
-HuggingFace automatically builds and runs the container.
-##
-### Future Improvements
-* Improved data preprocessing
-* Feature scaling and encoding
-* Enhanced model architecture
-* Evaluation metrics and validation
-* Risk categorization (low, medium, high)
-* Deployment to additional/cloud platforms (AWS)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Author  
 Rab Nawaz (PhD),  
