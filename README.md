@@ -164,7 +164,7 @@ python app.py
 ```
 ### Deploy on HuggingFace Spaces
 1. Create a Docker Space
-2. item Upload:
+2. Upload:
     * ```Dockerfile```
     * ```app.py```
     * ```requirements.txt```
