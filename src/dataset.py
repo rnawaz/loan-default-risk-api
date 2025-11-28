@@ -3,17 +3,17 @@ import torch
 from torch.utils.data import Dataset
 
 class LoanDataset(Dataset):
-    def __init__(self, features_path, targets_path):
+    def __init__(self, csv_path: str):
 
-        #load data
-        self.X = pd.read_csv(features_path).values.astype('float32')
+        # load data
+        df = pd.read_csv(csv_path)
 
-        y = pd.read_csv(targets_path).values
-        self.y = y.reshape(-1).astype('float32')
+        self.X = df.drop(columns=["target"]).values.astype("float32") # features
+        self.y = df["target"].values.astype("float32")                # targets
 
-        #convert to float32 tensors
-        self.X = torch.tensor(self.X, dtype=torch.float32)
-        self.y = torch.tensor(self.y, dtype=torch.float32)
+        #convert to tensors
+        self.X = torch.tensor(self.X)
+        self.y = torch.tensor(self.y)
 
     def __len__(self):
         return len(self.X)

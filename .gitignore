@@ -1,5 +1,21 @@
+# Ignore large raw data
 data/
-venv/
+*.csv
+*.xlsx
+
+# Keep trained models
+!models/*.pth
+!models/*.json
+
+# Ignore personal testing scripts
+src/test_predict.py
+
+# Python cache
 __pycache__/
-*.__pycache__.env
+*.pyc
+
+# Virtual environment
+venv/
+
+# Jupyter checkpoints
 .ipynb_checkpoints/
