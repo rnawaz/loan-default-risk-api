@@ -25,6 +25,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
+      - name: Run flake8 liintinig
         run: |
-          python -c "import pandas, numpy, torch; print('Dependencies OK')"
+        echo "Running liintinig..."
+        flake8 src --max-line-length=120 --ignore=E203,E266,E501,W503
+
+        - name: Dependency tests
+          run: |
+          python - <<EOF
+          import pandas, numpy, sklearn
+          print("Dependencies installed and working.")
+          EOF
