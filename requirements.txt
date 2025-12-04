@@ -5,3 +5,4 @@ xgboost
 jupyter 
 torch
 gradio==3.50.2
+flake8
