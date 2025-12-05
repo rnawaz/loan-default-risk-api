@@ -1,7 +1,11 @@
 import gradio as gr
-import torch
-import pandas as pd
-from src.predict import (load_mlp, preprocess_input, predict_mlp, load_xgb, predict_xgb)
+from src.predict import (
+    load_mlp,
+    preprocess_input,
+    predict_mlp,
+    load_xgb,
+    predict_xgb
+)
 
 FEATURE_ORDER = [
     "loan_amnt", "term", "int_rate", "installment",
@@ -40,7 +44,7 @@ def prediction_interface(
         "purpose": purpose
     }
 
-    if model_type=="MLP":
+    if model_type == "MLP":
         tensor = preprocess_input(input_dict, FEATURE_ORDER)
         prob = predict_mlp(mlp_model, tensor)
 
@@ -75,8 +79,8 @@ app = gr.Interface(
     inputs=inputs,
     outputs=output,
     title="Loan Default Risk Prediction",
-    description="Choose model and enter loan features to predict default probability"
+    description="Choose a model and enter features to predict default probability.",
 )
 
-if __name__=="__main__":
+if __name__ == "__main__":
     app.launch(server_name="0.0.0.0", server_port=7860)

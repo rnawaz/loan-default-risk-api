@@ -11,11 +11,13 @@ def load_mlp(model_path, num_features):
     model.eval()
     return model
 
+
 # load xgboost
 def load_xgb(model_path):
     model = xgb.XGBClassifier()
     model.load_model(model_path)
     return model
+
 
 # preprocess input
 def preprocess_input(input_dict, feature_order):
@@ -24,13 +26,14 @@ def preprocess_input(input_dict, feature_order):
 
     for feat in feature_order:
         values.append(float(input_dict[feat]))
-        
+
     return torch.tensor(values, dtype=torch.float32).unsqueeze(0)
-    
+
+
 # -----  Predict with MLP -----
 def predict_mlp(model, input_tensor):
     with torch.no_grad():
-        prob = model(input_tensor).item()   # no extra sigmoid, model already has one
+        prob = model(input_tensor).item()
     return float(prob)
 
 
@@ -42,4 +45,3 @@ def predict_xgb(model, input_dict, feature_order):
     df = pd.DataFrame([row], columns=feature_order)
     prob = model.predict_proba(df)[0][1]
     return float(prob)
-

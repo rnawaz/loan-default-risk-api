@@ -4,22 +4,24 @@ from torch.utils.data import DataLoader, random_split
 from dataset import LoanDataset
 from model import MLP
 
-def train(model, train_loader, optimzer, criterion, device):
+
+def train(model, train_loader, optimizer, criterion, device):
     model.train()
     total_loss = 0
 
     for xb, yb in train_loader:
         xb, yb = xb.to(device), yb.to(device)
 
-        optimzer.zero_grad()
+        optimizer.zero_grad()
         preds = model(xb).squeeze()
         loss = criterion(preds, yb)
         loss.backward()
-        optimzer.step()
+        optimizer.step()
 
         total_loss += loss.item()
 
     return total_loss
+
 
 def evaluate(model, test_loader, criterion, device):
     model.eval()
@@ -28,11 +30,13 @@ def evaluate(model, test_loader, criterion, device):
     with torch.no_grad():
         for xb, yb in test_loader:
             xb, yb = xb.to(device), yb.to(device)
-            preds =model(xb).squeeze()
+            preds = model(xb).squeeze()
             loss = criterion(preds, yb)
             total_loss += loss.item()
+
         return total_loss
-    
+
+
 def main():
     # load dataset
     dataset = LoanDataset("data/clean_data.csv")
@@ -58,15 +62,15 @@ def main():
     epochs = 5
     for epoch in range(epochs):
         train_loss = train(model, train_loader, optimizer, criterion, device)
-        val_loss   = evaluate(model, test_loader, criterion, device)
+        val_loss = evaluate(model, test_loader, criterion, device)
 
         print(f"Epoch {epoch+1}/{epochs} "
               f"- Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-        
+
     # save the model
     torch.save(model.state_dict(), "models/mlp_model.pth")
     print("MLP model saved to /models/mlp_model.pth")
 
-if __name__== "__main__":
-    main()
 
+if __name__ == "__main__":
+    main()

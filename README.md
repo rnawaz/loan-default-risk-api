@@ -13,9 +13,8 @@ Both models are trained on the cleaned LendingClub dataset and support probabili
                     │   Raw LendingClub Data  │
                     └──────────────┬──────────┘
                                    │
-                         Data Cleaning & Feature
-                               Engineering
-                     (notebooks/data_preprocess.ipynb)
+                  Data Cleaning & Feature Engineering
+                   (notebooks/data_preprocess.ipynb)
                                    │
                                    ▼
                      ┌─────────────────────────┐

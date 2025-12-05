@@ -33,10 +33,10 @@ model = xgb.XGBClassifier(
 )
 
 print("Training XGBoost model...")
-model.fit(X_train,y_train)
+model.fit(X_train, y_train)
 
 # evaluate
-preds = model.predict_proba(X_test)[:,1]
+preds = model.predict_proba(X_test)[:, 1]
 
 auc = roc_auc_score(y_test, preds)
 print(f"\nAUC Score: {auc:.4f}")
